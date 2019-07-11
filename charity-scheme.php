@@ -1,33 +1,173 @@
 <?php
 
-function example() {
-?>
-    <form id="myForm" name="myform" action="<?php echo esc_attr( admin_url('admin-post.php') ); ?>" method="POST">
-        <input type="hidden" name="action" value="save_my_custom_form" />
-        <select id="brandSel" size="1">
-            <option selected="selected" value="">-- Select Brand --</option>
-            <option>Abba</option>
-            <option>AG Hair</option>
-            <option>Abbacc</option>
-            <option>AGWW Hair</option>
-        </select>
-
-        <input type="submit" value="submit" />
-    </form>
-<?php
-}
 
 
 // Enqueue Scripts For Charity Scheme Plugin
 if( ! function_exists( 'charity_scheme_scripts_enqueuing' ) ) :
 
     function charity_scheme_scripts_enqueuing() {
-        wp_enqueue_script( 'charity-js', plugin_dir_url( __FILE__ ) . '/charity-scheme.js' );
+        wp_enqueue_script( 'charity-js', plugin_dir_url( __FILE__ ) . '/charity-scheme.js', array('jquery'), false, true );
     }
 
 endif;
 add_action( 'wp_enqueue_scripts', 'charity_scheme_scripts_enqueuing' );
 
+
+/**
+ * 
+ *  ==================
+ *  AJAX FUNCTIONS
+ *  ==================
+ * 
+ */
+
+// AJAX Callback Functionality And Sending E-mail To Administrator
+function save_charity_donation_form_one() {
+    
+    $content = '';
+
+    $charityScheme = wp_strip_all_tags( $_POST[ 'charityScheme' ] );
+    
+    // Checking validation and sending whole set of data
+    if( $charityScheme ) {
+
+        $Custom_post_type = $charityScheme;
+
+        if( $Custom_post_type ) {
+            $taxonomies = get_object_taxonomies( $Custom_post_type, 'objects' );
+        }
+
+        if( $taxonomies ) {
+            $content .= '<form id="charity-donation-form-two" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) . '">';
+
+                foreach( $taxonomies as $taxonomy ) {
+                   
+                    $content .= '<div class="row">
+                    <h6 style="text-transform:uppercase;">' . $taxonomy->label . ':</h6>';
+                        
+                        $args = array(
+                            'show_option_all'    => __( '...Please Select a(an) ' ) . $taxonomy->labels->singular_name,
+                            'show_option_none'   => '',
+                            'option_none_value'  => '-1',
+                            'orderby'            => 'ID',
+                            'order'              => 'ASC',
+                            'show_count'         => 0,
+                            'hide_empty'         => 1,
+                            'child_of'           => 0,
+                            'exclude'            => '',
+                            'include'            => '',
+                            'echo'               => 0, // Not ECHOing
+                            'selected'           => 0,
+                            'hierarchical'       => 0,
+                            'name'               => $taxonomy->name,
+                            'id'                 => '',
+                            'class'              => 'postform',
+                            'depth'              => 0,
+                            'tab_index'          => 0,
+                            'taxonomy'           => $taxonomy->name,
+                            'hide_if_empty'      => false,
+                            'value_field'	     => 'name',
+                        );
+        
+                        $content .= wp_dropdown_categories( $args );
+                    
+                        $content .= '<span class="cs_' . $taxonomy->name . '"><span>';
+
+                    $content .= '</div><!-- /.row -->';
+                } // Ending ForEach Func...
+            
+                $content .= '<input type="hidden" name="cpt_name" value="' . $Custom_post_type . '">
+                <br />
+                <input type="submit" name="option_btn" id="option_btn" value="Get ' . ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ) . '">';
+
+            $content .= '</form>';
+
+        }
+
+        // Sending Data To Display Thriugh JS
+        echo $content; // Return either 1 or 0
+
+    } else {
+        echo 0;
+    }
+
+    die();
+
+}
+add_action( 'admin_post_nopriv_save_charity_donation_form_one', 'save_charity_donation_form_one' );
+add_action( 'admin_post_save_charity_donation_form_one', 'save_charity_donation_form_one' );
+
+
+// AJAX Callback Functionality Form Two
+function save_charity_donation_form_two() {
+    
+    $cptName = wp_strip_all_tags( $_POST[ 'cptName' ] );
+    $country = wp_strip_all_tags( $_POST[ 'country' ] );
+    $county = wp_strip_all_tags( $_POST[ 'county' ] );
+    $city = wp_strip_all_tags( $_POST[ 'city' ] );
+    $institutionType = wp_strip_all_tags( $_POST[ 'institutionType' ] );
+
+    $item_type = ( $cptName == 'edu_institutions' ? 'edu_type' : 'sport_type' );
+    
+    if( $cptName ) {
+        $myposts = get_posts(
+            array(
+                'showposts' => -1,
+                'post_type' => $cptName,
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'country',
+                        'field' => 'slug',
+                        'terms' => $country
+                    ),
+                    array(
+                        'taxonomy' => 'county',
+                        'field' => 'slug',
+                        'terms' => $county
+                    ),
+                    array(
+                        'taxonomy' => 'city',
+                        'field' => 'slug',
+                        'terms' => $city
+                    ),
+                    array(
+                        'taxonomy' => $item_type,
+                        'field' => 'slug',
+                        'terms' => $institutionType
+                    )
+                )
+            )
+        );
+        
+        
+        $output = '<div class="row"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
+
+        if( $myposts ) {
+            foreach ($myposts as $mypost) {
+                $output .= '<option value="'. $mypost->post_title .'">'. $mypost->post_title .'</option>';
+            }
+        }
+
+        $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><br /><input type="submit" name="item_seclect_btn" value="Select"></form></div>';
+
+        echo $output;
+        
+    } else {
+
+        echo 0;
+        
+    }
+
+    die();
+
+}
+add_action( 'admin_post_nopriv_save_charity_donation_form_two', 'save_charity_donation_form_two' );
+add_action( 'admin_post_save_charity_donation_form_two', 'save_charity_donation_form_two' );
+
+
+/**
+ * FINAL AJAX CALL
+ */
 // AJAX Callback Functionality And Sending E-mail To Administrator
 function save_charity_data_form() {
     
@@ -89,6 +229,15 @@ function save_charity_data_form() {
 }
 add_action( 'admin_post_nopriv_save_charity_donation_data_form', 'save_charity_data_form' );
 add_action( 'admin_post_save_charity_donation_data_form', 'save_charity_data_form' );
+
+
+/**
+ * 
+ *  ===============================
+ *  Registering Custom Post Types
+ *  ===============================
+ * 
+ */
 
 // Registering Custom Post Types
 if( ! function_exists( 'custom_post_types_generator' ) ) {
@@ -404,10 +553,11 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
             // Satrt HTML Body section...
             ob_start();
         ?>
-                <div class="charity-scheme-form-content" style="padding:140px 0;">
                     <div class="form-content">
                         <div class="row">
-                        <form action="/a" method="post">
+                        <!-- <form action="/a" method="post"> -->
+                        <form id="charity-donation-form-one" action="#" method="post" data-url="<?php echo esc_attr( admin_url('admin-post.php') ); ?>">
+
                             <h4 style="text-transform:uppercase;"><?php echo __( 'Schools or Sports Charity Scheme:' ); ?></h4>
                             <select name="charity_schemes" id="charity_schemes">
                                 <option value=""><?php echo __( '...Please Select an Option' ) ?></option>
@@ -422,68 +572,13 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
                             ?>  </select>
                             <br />
                                 <input type="submit" name="sub_btn" id="sub_btn" value="Proceed" />
+                                <span class="cs-type-field" style="color:#FF0000;display:block;margin-top:0.5rem;"></span>
                             </form>
                         </div><!-- /.row -->
                     
-                    <?php if( $selected ) { // Start Second Form ?>
-
-                        <div class="row">
-
-                    <?php
-                        $Custom_post_type = $selected;
-                        
-                        if( $Custom_post_type ) $taxonomies = get_object_taxonomies( $Custom_post_type, 'objects' );
-                        
-                        if( $taxonomies ) {
-                    ?>
-                            <form action="/a/b" method="post">
-                    <?php
-                                foreach( $taxonomies as $taxonomy ) {
-                    ?>
-                                    <br />
-                                    <div class="row">
-                                        <h6 style="text-transform:uppercase;"><?php echo $taxonomy->label . ':'; ?></h6>
-                                    <?php
-                                        $args = array(
-                                            'show_option_all'    => __( '...Please Select a(an) ' ) . $taxonomy->labels->singular_name,
-                                            'show_option_none'   => '',
-                                            'option_none_value'  => '-1',
-                                            'orderby'            => 'ID',
-                                            'order'              => 'ASC',
-                                            'show_count'         => 0,
-                                            'hide_empty'         => 1,
-                                            'child_of'           => 0,
-                                            'exclude'            => '',
-                                            'include'            => '',
-                                            'echo'               => 1,
-                                            'selected'           => 0,
-                                            'hierarchical'       => 0,
-                                            'name'               => $taxonomy->name,
-                                            'id'                 => '',
-                                            'class'              => 'postform',
-                                            'depth'              => 0,
-                                            'tab_index'          => 0,
-                                            'taxonomy'           => $taxonomy->name,
-                                            'hide_if_empty'      => false,
-                                            // 'value_field'	     => 'term_id',
-                                            'value_field'	     => 'name',
-                                        );
-                            
-                                        $taxo_lists = wp_dropdown_categories( $args );
-                                    ?>
-                                    </div><!-- /.row -->
-                                <?php } ?>
-                                <input type="hidden" name="cpt_name" value="<?php echo $Custom_post_type; ?>">
-                                <br />
-                                <input type="submit" name="option_btn" id="option_btn" value="Get <?php echo ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ); ?>">
-                            </form>
-                        <?php } ?>
-                        
-                    <?php } // End Second Form ?>
+                    <!-- HTML FORM TWO  -->
                     
-                    </div> <!-- /.form-content -->
-
-                </div> <!-- /.charity-scheme-form-content -->    
+                    </div> <!-- /.form-content -->   
         <?php
 
             return ob_get_clean();
@@ -495,315 +590,6 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
  endif;
 
 
-if( ! shortcode_exists( 'charity-type' ) ) :
-
-    add_shortcode( 'charity-type', 'generate_charity_type_shortcode' );
-    if( ! function_exists( 'generate_charity_type_shortcode' ) ) :
-
-        function generate_charity_type_shortcode( $atts = [], $content = null ) {
-
-            ob_start();
-                
-                $item_type = $_POST[ 'cpt_name' ] == 'edu_institutions' ? 'edu_type' : 'sport_club';
-                    
-                if( isset( $_POST[ 'option_btn' ] ) ) { // Start of INNER - IF Statement...
-                
-                    echo 'Charity Type: ' . $_POST[ 'cpt_name' ] . '<br />Country: ' . $_POST[ 'country' ] . '<br />County: ' . $_POST[ 'county' ] . '<br />City: ' . $_POST[ 'city' ] . '<br />Type: ' . $_POST[ $item_type ] . '<br />';
-                    echo get_current_user_id() . '<br />';
-
-                    $myposts = get_posts(
-                        array(
-                            'showposts' => -1,
-                            'post_type' => $_POST[ 'cpt_name' ],
-                            'tax_query' => array(
-                                array(
-                                    'taxonomy' => 'country',
-                                    'field' => 'slug',
-                                    'terms' => $_POST[ 'country' ]
-                                ),
-                                array(
-                                    'taxonomy' => 'county',
-                                    'field' => 'slug',
-                                    'terms' => $_POST[ 'county' ]
-                                ),
-                                array(
-                                    'taxonomy' => 'city',
-                                    'field' => 'slug',
-                                    'terms' => $_POST[ 'city' ]
-                                ),
-                                array(
-                                    'taxonomy' => $item_type,
-                                    'field' => 'slug',
-                                    'terms' => $_POST[ $item_type ]
-                                )
-                            )
-                        )
-                    );
-                        
-                    if( $myposts ) { ?>
-                        <div class="row">
-                            <h6 style="text-transform:uppercase;">
-                            <?php
-                                echo ( $_POST[ 'cpt_name' ] == 'edu_institutions' ? 'Institutions:' : 'Clubs:' );
-                                ?>                        
-                            </h6>
-                            <form id="charity-donation-data-form" action="#" method="post" data-url="<?php echo esc_attr( admin_url('admin-post.php') ); ?>">
-                                <select name="donate_options" id="donate_options">
-                                    <option value="">...Please Select a(an) <?php echo esc_html( $_POST[ $item_type ] ); ?></option> 
-                                <?php
-                                foreach ($myposts as $mypost) { ?>
-                                    <option value="<?php
-                                    echo $mypost->post_title;
-                                    ?>" <?php echo ( @$_POST[ 'donate_options' ] == $mypost->post_title ? 'selected="selected"' : '' ); ?>><?php
-                                    echo $mypost->post_title;
-                                    ?></option>
-                                <?php } ?>
-                                </select>
-                                <input type="hidden" name="cpt_user_id" id="cpt_user_id" value="<?php echo esc_attr( get_current_user_id() ); ?>">
-                                <input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="<?php echo esc_attr( $_POST[ 'cpt_name' ] ); ?>">
-                                <input type="hidden" name="selected_country" id="selected_country" value="<?php echo esc_attr( $_POST[ 'country' ] ); ?>">
-                                <input type="hidden" name="selected_county" id="selected_county" value="<?php echo esc_attr( $_POST[ 'county' ] ); ?>">
-                                <input type="hidden" name="selected_city" id="selected_city" value="<?php echo esc_attr( $_POST[ 'city' ] ); ?>">
-                                <input type="hidden" name="selected_type" id="selected_type" value="<?php echo esc_attr( $_POST[ $item_type ] ); ?>">
-                                <br />
-                                <input type="submit" name="item_seclect_btn" value="Select">
-                            </form>
-
-                        </div><!-- /row -->
-                    <?php
-
-                    } // End of $myposts - IF Statement...
-
-                
-                } // End of INNER - IF Statement...
-
-                ?>
-            </div>
-
-            <?php // End of - IF Statement...
-
-            return ob_get_clean();
-
-        }
-
-    endif;
-
-endif;
-
-
-// Shortcode Generator [charity-schemes]
-if( ! shortcode_exists( 'charity-schemes' ) ) {
-    
-    add_shortcode( 'charity-schemes', 'generate_shortcode_for_charity_scheme_dropdown_option' );
-    
-    if( !function_exists( 'generate_shortcode_for_charity_scheme_dropdown_option' ) ) {
-        function generate_shortcode_for_charity_scheme_dropdown_option( $atts = [], $content = null ) {
-    
-            $HTML_contents = '';
-            $selected = '';
-
-            $args = [
-                'public'   => true,
-                '_builtin' => false,
-            ];
-             
-            $output = 'objects'; // names or objects, note names is the default
-            $operator = 'and'; // 'and' or 'or'
-             
-            $post_types = get_post_types( $args, $output, $operator );
-
-                ob_start();
-            ?>
-    <div class="charity-scheme-form-content" style="padding:140px 0;">
-        <div class="form-content">
-            <div class="row">
-            <form action="/charity-schemes/information" method="post">
-                <select name="charity_schemes" id="charity_schemes">
-                    <option value=""><?php echo __( '...Please Select an Option' ) ?></option>
-    <?php           
-            $selected = @$_POST[ 'charity_schemes' ] ? $_POST[ 'charity_schemes' ] : '';
-            foreach ( $post_types  as $post_type ) {
-                if ( $post_type->name == 'edu_institutions' OR $post_type->name == 'sport_clubs' ) { ?>
-                <option value="<?php echo $post_type->name; ?>" <?php echo ($selected == $post_type->name ? 'selected="selected"' : ''); ?>><?php echo $post_type->label; ?></option>
-            <?php
-                }
-            }
-    ?>              </select>
-            <br />
-                <input type="submit" name="sub_btn" id="sub_btn" value="Proceed" />
-            </form>
-            </div><!-- /.row -->
-
-         </div>
-    </div>       
-    <?php
-            return ob_get_clean();
-    
-        }
-    }
-
-}
-
-// Shortcode Generator [cs-info]
-if( ! shortcode_exists( 'cs-info' ) ) {
-    
-    add_shortcode( 'cs-info', 'generate_shortcode_for_cs_info_dropdown_option' );
-    
-    if( !function_exists( 'generate_shortcode_for_cs_info_dropdown_option' ) ) {
-        function generate_shortcode_for_cs_info_dropdown_option( $atts = [], $content = null ) {
-
-            // THE PAGE ID...
-            echo '<h3>ID: ~ ' . get_the_ID() . ' ~</h3>';
-            echo '<h3>Slug: ~ ' . get_post_field( 'post_name', get_the_ID() ) . ' ~</h3>';
-                ob_start();
-
-
-            ?>
-    <div class="charity-scheme-form-content" style="padding:140px 0;">
-        <div class="form-content">
-            <div class="row">
-                
-    <?php
-
-            $Custom_post_type = @$_POST[ 'charity_schemes' ] ? $_POST[ 'charity_schemes' ] : '';
-
-            if( $Custom_post_type ) $taxonomies = get_object_taxonomies( $Custom_post_type, 'objects' );
-
-            if( $taxonomies ) {
-                // var_dump($taxonomies);
-                ?>
-                <form action="/charity-schemes/Information" method="post">
-                <?php
-                foreach( $taxonomies as $taxonomy ) {
-                    ?>
-                    <br />
-                <div class="row">
-                    <h6 style="text-transform:uppercase;"><?php echo $taxonomy->label . ':'; ?></h6>
-                    <?php
-                    $args = array(
-                        'show_option_all'    => __( '...Please Select a(an) ' ) . $taxonomy->labels->singular_name,
-                        'show_option_none'   => '',
-                        'option_none_value'  => '-1',
-                        'orderby'            => 'ID',
-                        'order'              => 'ASC',
-                        'show_count'         => 0,
-                        'hide_empty'         => 1,
-                        'child_of'           => 0,
-                        'exclude'            => '',
-                        'include'            => '',
-                        'echo'               => 1,
-                        'selected'           => 0,
-                        'hierarchical'       => 0,
-                        'name'               => $taxonomy->name,
-                        'id'                 => '',
-                        'class'              => 'postform',
-                        'depth'              => 0,
-                        'tab_index'          => 0,
-                        'taxonomy'           => $taxonomy->name,
-                        'hide_if_empty'      => false,
-                        // 'value_field'	     => 'term_id',
-                        'value_field'	     => 'name',
-                    );
-
-                    $taxo_lists = wp_dropdown_categories( $args );
-
-                    ?>
-                </div><!-- /.row -->
-
-            <?php
-                } ?>
-                <input type="hidden" name="cpt_name" value="<?php echo $Custom_post_type; ?>">
-                <br />
-                <input type="submit" name="option_btn" id="option_btn" value="Get <?php echo ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ); ?>">
-            </form>
-            <?php }
-            ?>
-
-                </div>
-            <?php
-
-                $item_type = $_POST[ 'cpt_name' ] == 'edu_institutions' ? 'edu_type' : 'sport_club';
-                
-                if( isset( $_POST[ 'option_btn' ] ) ) { // Start of INNER - IF Statement...
-                 
-                echo 'Country: ' . $_POST[ 'country' ] . '<br />County: ' . $_POST[ 'county' ] . '<br />City: ' . $_POST[ 'city' ] . '<br />Type: ' . $_POST[ $item_type ] . '<br />';
-                // echo 'Country: ' . get_post( $_POST[ 'country' ], ARRAY_A )['post_title'] . '<br />County: ' . get_post( $_POST[ 'county' ], ARRAY_A )['post_title'] . '<br />City: ' . get_post( $_POST[ 'city' ], ARRAY_A )['post_title'] . '<br />Type: ' . get_post( $_POST[ $item_type ], ARRAY_A )['post_title'] . '<br />';
-                // echo 'Country: ' . get_post( $_POST[ 'country' ], ARRAY_A )['post_title'] . '<br />County: ' . get_post( $_POST[ 'county' ], ARRAY_A )['post_title'] . '<br />City: ' . get_post( $_POST[ 'city' ], ARRAY_A )['post_title'] . '<br />Type: ' . get_post( $_POST[ $item_type ], ARRAY_A )['post_title'] . '<br />';
-
-                        $myposts = get_posts(
-                            array(
-                                'showposts' => -1,
-                                'post_type' => $_POST[ 'cpt_name' ],
-                                'tax_query' => array(
-                                    array(
-                                        'taxonomy' => 'country',
-                                        'field' => 'slug',
-                                        'terms' => $_POST[ 'country' ]
-                                    ),
-                                    array(
-                                        'taxonomy' => 'county',
-                                        'field' => 'slug',
-                                        'terms' => $_POST[ 'county' ]
-                                    ),
-                                    array(
-                                        'taxonomy' => 'city',
-                                        'field' => 'slug',
-                                        'terms' => $_POST[ 'city' ]
-                                    ),
-                                    array(
-                                        'taxonomy' => $item_type,
-                                        'field' => 'slug',
-                                        'terms' => $_POST[ $item_type ]
-                                    )
-                                )
-                            )
-                        );
-                        
-                        if( $myposts ) { ?>
-                        <div class="row">
-                            <h6 style="text-transform:uppercase;">
-                            <?php
-                                echo ( $_POST[ 'cpt_name' ] == 'edu_institutions' ? 'Institutions:' : 'Clubs:' );
-                                ?>                        
-                            </h6>
-                            <form action="/user-profile" method="post">
-                                <select name="donate_options" id="donate_options">
-                                    <option value="">...Please Select a(an) <?php echo esc_html( $_POST[ $item_type ] ); ?></option> 
-                                <?php
-                                foreach ($myposts as $mypost) { ?>
-                                    <option value="<?php
-                                    echo $mypost->post_title;
-                                    ?>" <?php echo ( @$_POST[ 'item_opts' ] == $mypost->post_title ? 'selected="selected"' : '' ); ?>><?php
-                                    echo $mypost->post_title;
-                                    ?></option>
-                                <?php } ?>
-                                </select>
-                                <input type="hidden" name="selected_country" id="selected_country" value="<?php echo esc_attr( $_POST[ 'country' ] ); ?>">
-                                <input type="hidden" name="selected_county" id="selected_county" value="<?php echo esc_attr( $_POST[ 'county' ] ); ?>">
-                                <input type="hidden" name="selected_city" id="selected_city" value="<?php echo esc_attr( $_POST[ 'city' ] ); ?>">
-                                <input type="hidden" name="selected_type" id="selected_type" value="<?php echo esc_attr( $_POST[ $item_type ] ); ?>">
-                                <br />
-                                <input type="submit" name="item_seclect_btn" value="Select">
-                            </form>
-
-                        </div><!-- /row -->
-                    <?php
-                        }
-                   
-                } // End of INNER - IF Statement...
-
-                ?>
-            </div>
-
-            <?php // End of - IF Statement...
-
-            return ob_get_clean();
-    
-        }
-
-    }
-
-}
 
 /**
  * The field on the editing screens.
