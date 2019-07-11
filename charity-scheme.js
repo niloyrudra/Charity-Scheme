@@ -32,8 +32,14 @@ jQuery( document ).ready(
                         charityScheme : charityScheme,
                         action : 'save_charity_donation_form_one'
                     },
+                    beforeSend: function(){
+                        formOne.querySelector( '.lds-charity' ).classList.add( 'show' );
+                    },
                     error : function( res ) {
                         console.log( res );
+                    },
+                    complete: function(){
+                        formOne.querySelector( '.lds-charity' ).classList.remove( 'show' );
                     },
                     success : function( res ) {
                         if( res == 0 ) {
@@ -112,8 +118,14 @@ jQuery( document ).ready(
                                                 cptName : cptName,
                                                 action : 'save_charity_donation_form_two'
                                             },
+                                            beforeSend: function(){
+                                                formTwo.querySelector( '.lds-charity' ).classList.add( 'show' );
+                                            },
                                             error : function( res ) {
-                                                 console.log( res );
+                                                console.log( res );
+                                            },
+                                            complete: function(){
+                                                formTwo.querySelector( '.lds-charity' ).classList.remove( 'show' );
                                             },
                                             success : function( res ) {
                                                 if( res == 0 ) {
@@ -127,8 +139,16 @@ jQuery( document ).ready(
                                                         var container = document.createElement( 'div' );
                                                             container.setAttribute( 'class', 'form-Three-container' );
                                                             container.innerHTML = res;
+
+                                                        // disable all the form fields of Form Two
+                                                        var formTwoSelectFields = formTwo.querySelectorAll('select');
+                                                        if(formTwoSelectFields) {
+                                                            formTwoSelectFields.forEach( selectField => {
+                                                                selectField.setAttribute( 'disabled', 'disabled' );
+                                                                selectField.style.opacity = '0.5';
+                                                            });
+                                                        }
                                                         // Appending Form Two...
-                                                        // formsContainer.innerHTML = '';
                                                         formsContainer.appendChild(container);
 
                                                         form = formOne.parentElement.nextElementSibling.nextElementSibling.firstChild.querySelector('#charity-donation-data-form');
@@ -151,6 +171,10 @@ jQuery( document ).ready(
 
                                                                 if( charityName == '' ) {
                                                                     console.log( 'Required option is empty!' ); // Needs to modify
+                                                                    var span = document.createElement('span');
+                                                                        span.setAttribute('style', 'color:red;display:block;');
+                                                                        span.innerText = 'Required option is empty!';
+                                                                    form.querySelector( '#donate_options' ).appendChild(span);
                                                                     return;
                                                                 }
 
@@ -167,9 +191,15 @@ jQuery( document ).ready(
                                                                         county : county,
                                                                         city : city,
                                                                         action : 'save_charity_donation_data_form'
+                                                                    },                                                                    
+                                                                    beforeSend: function(){
+                                                                        form.querySelector( '.lds-charity' ).classList.add( 'show' );
                                                                     },
                                                                     error : function( res ) {
                                                                         console.log( res );
+                                                                    },
+                                                                    complete: function(){
+                                                                        form.querySelector( '.lds-charity' ).classList.remove( 'show' );
                                                                     },
                                                                     success : function( res ) {
                                                                         if( res == 0 ) {
@@ -177,11 +207,11 @@ jQuery( document ).ready(
                                                                         } else {
                                                                             console.log( 'Congratulations! Your donation plan has been successfully submitted.' );
                                                                             formsContainer.innerHTML = '';
-                                                                            formsContainer.innerHTML = '<h4 style="color:#54B948">Congratulations! Your donation plan has been successfully submitted.</h4>';
+                                                                            formsContainer.innerHTML = `<h4 style="color:#54B948">Congratulations <a href="/user-profile" ref="nofollow" style="color:#54B948">${res}</a>! Your donation plan has been successfully submitted.</h4>`;
                                                                         }
                                                                     }
 
-                                                                });
+                                                                } );
                                                                 
                                                             } );
 

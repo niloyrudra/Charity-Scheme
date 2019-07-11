@@ -1,0 +1,65 @@
+.form-content {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+.form-content form {
+    display: block;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    transition: all 360ms ease-in-out 500ms;
+}
+.form-content select {
+    width: 100%;
+    margin-bottom: 0.75rem;
+}
+.form-two-container .row {
+    width:100%;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px dotted rgba(0,0,0,0.2);
+}
+
+/* LOADING ICON */
+.lds-charity {
+    display: none;
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+  .lds-charity.show{
+      display: block;
+  }
+  .lds-charity div {
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    width: 13px;
+    background: rgb(94, 182, 241);
+    animation: lds-charity 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+  }
+  .lds-charity div:nth-child(1) {
+    left: 6px;
+    animation-delay: -0.24s;
+  }
+  .lds-charity div:nth-child(2) {
+    left: 26px;
+    animation-delay: -0.12s;
+  }
+  .lds-charity div:nth-child(3) {
+    left: 45px;
+    animation-delay: 0;
+  }
+  @keyframes lds-charity {
+    0% {
+      top: 6px;
+      height: 51px;
+    }
+    50%, 100% {
+      top: 19px;
+      height: 26px;
+    }
+  }
+  

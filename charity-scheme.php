@@ -6,6 +6,7 @@
 if( ! function_exists( 'charity_scheme_scripts_enqueuing' ) ) :
 
     function charity_scheme_scripts_enqueuing() {
+        wp_enqueue_style( 'charity-styles', plugin_dir_url( __FILE__ ) . '/cs-style.css' );
         wp_enqueue_script( 'charity-js', plugin_dir_url( __FILE__ ) . '/charity-scheme.js', array('jquery'), false, true );
     }
 
@@ -80,7 +81,7 @@ function save_charity_donation_form_one() {
                 <br />
                 <input type="submit" name="option_btn" id="option_btn" value="Get ' . ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ) . '">';
 
-            $content .= '</form>';
+            $content .= '<div class="lds-charity"><div></div><div></div><div></div></div></form>';
 
         }
 
@@ -139,8 +140,7 @@ function save_charity_donation_form_two() {
             )
         );
         
-        
-        $output = '<div class="row"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
+        $output = '<div class="row"><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
 
         if( $myposts ) {
             foreach ($myposts as $mypost) {
@@ -148,7 +148,7 @@ function save_charity_donation_form_two() {
             }
         }
 
-        $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><br /><input type="submit" name="item_seclect_btn" value="Select"></form></div>';
+        $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="submit" name="item_seclect_btn" value="Select"><div class="lds-charity"><div></div><div></div><div></div></div></form></div>';
 
         echo $output;
         
@@ -217,7 +217,7 @@ function save_charity_data_form() {
         // Triggering Email Submission
         wp_mail( $to, $subject, $message, $headers );  // wp_mail( $to, $subject, $message, '', array( '' ) ); the last array for attaching atachments
 
-        echo $charityID; // Return either 1 or 0
+        echo $donnerDisplayName; // Return either 1 or 0
 
     } else {
         echo 0;
@@ -573,6 +573,7 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
                             <br />
                                 <input type="submit" name="sub_btn" id="sub_btn" value="Proceed" />
                                 <span class="cs-type-field" style="color:#FF0000;display:block;margin-top:0.5rem;"></span>
+                                <div class="lds-charity"><div></div><div></div><div></div></div>
                             </form>
                         </div><!-- /.row -->
                     
@@ -623,8 +624,6 @@ function wporg_usermeta_form_field_charity_scheme($user)
     <?php
 }
  
-
-
 /**
  * The save action.
  *
@@ -672,9 +671,6 @@ add_action(
     'wporg_usermeta_form_field_charity_scheme_update'
 );
 
-
-
-
 /**
  * 
  *  ============
@@ -682,16 +678,16 @@ add_action(
  *  ============
  * 
  */
-function mailtrap($phpmailer) {
-    $phpmailer->isSMTP();
-    $phpmailer->Host = 'smtp.mailtrap.io';
-    $phpmailer->SMTPAuth = true;
-    $phpmailer->Port = 2525;
-    $phpmailer->Username = 'f9fbc11e592e64';
-    $phpmailer->Password = '1c33a8ca575489';
-}
+// function mailtrap($phpmailer) {
+//     $phpmailer->isSMTP();
+//     $phpmailer->Host = 'smtp.mailtrap.io';
+//     $phpmailer->SMTPAuth = true;
+//     $phpmailer->Port = 2525;
+//     $phpmailer->Username = 'f9fbc11e592e64';
+//     $phpmailer->Password = '1c33a8ca575489';
+// }
   
-add_action('phpmailer_init', 'mailtrap');
+// add_action('phpmailer_init', 'mailtrap');
 
 
 
