@@ -1,6 +1,6 @@
 <?php
 
-
+defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 // Enqueue Scripts For Charity Scheme Plugin
 if( ! function_exists( 'charity_scheme_scripts_enqueuing' ) ) :
@@ -77,9 +77,7 @@ function save_charity_donation_form_one() {
                     $content .= '</div><!-- /.row -->';
                 } // Ending ForEach Func...
             
-                $content .= '<input type="hidden" name="cpt_name" value="' . $Custom_post_type . '">
-                <br />
-                <input type="submit" name="option_btn" id="option_btn" value="Get ' . ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ) . '">';
+                $content .= '<input type="hidden" name="cpt_name" value="' . $Custom_post_type . '"><input type="submit" name="option_btn" id="option_btn" value="Get ' . ( $Custom_post_type == 'edu_institutions' ? 'Institutions' : 'Clubs' ) . '">';
 
             $content .= '<div class="lds-charity"><div></div><div></div><div></div></div></form>';
 
