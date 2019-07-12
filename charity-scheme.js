@@ -79,22 +79,34 @@ jQuery( document ).ready(
                                                 institutionType = formTwo.querySelector( '#sport_type' ).value;
                                             }
                             
-                                                console.log(ajaxURL);
-                            
+                                            var countryTextMsg = formTwo.querySelector('.cs_country'),
+                                                countyTextMsg = formTwo.querySelector('.cs_county'),
+                                                cityTextMsg = formTwo.querySelector('.cs_city'),
+                                                eduType,
+                                                sportType;
+
+                                            // Setting Info Messages Span Empty...
+                                            countryTextMsg.innerText = '';
+                                            countyTextMsg.innerText = '';
+                                            cityTextMsg.innerText = '';
+                                                                        
                                             // Field Validation...
-                                            if( country === '' ) {
-                                                formTwo.querySelector('.cs_country').innerText = 'Please to select a country!';
+                                            if( country === '0' ) {
+                                                countryTextMsg.innerText = 'Please select a country!';
                                                 return;
                                             }
-                                            if( county === '' ) {
-                                                formTwo.querySelector('.cs_county').innerText = 'Please select a county!';
+                                            if( county === '0' ) {
+                                                countyTextMsg.innerText = 'Please select a county!';
                                                 return;
                                             }
-                                            if( city === '' ) {
-                                                formTwo.querySelector('.cs_city').innerText = 'You have to select a city!';
+                                            if( city === '0' ) {
+                                                cityTextMsg.innerText = 'You have to select a city!';
                                                 return;
                                             }
-                                            if( institutionType === '' ) {
+                                            if( institutionType === '0' ) {
+                                                if( formTwo.querySelector('.cs_edu_type') ) {formTwo.querySelector('.cs_edu_type').innerText = '';}
+                                                if( formTwo.querySelector('.cs_sport_type') ) {formTwo.querySelector('.cs_sport_type').innerText = '';}
+                                               
                                                 if( cptName === 'edu_institutions' ) {
                                                     formTwo.querySelector('.cs_edu_type').innerText = 'You have to select a Institution!';
                                                     return;
@@ -167,17 +179,17 @@ jQuery( document ).ready(
                                                                     country = form.querySelector( '#selected_country' ).value,
                                                                     county = form.querySelector( '#selected_county' ).value,
                                                                     city = form.querySelector( '#selected_city' ).value,
-                                                                    ajaxURL = form.getAttribute('data-url');
+                                                                    ajaxURL = form.getAttribute('data-url'),
+                                                                    csMsgInfo = form.querySelector( 'span' );
+                                                                    
+                                                                csMsgInfo.innerText = '';
 
                                                                 if( charityName == '' ) {
-                                                                    console.log( 'Required option is empty!' ); // Needs to modify
-                                                                    var span = document.createElement('span');
-                                                                        span.setAttribute('style', 'color:red;display:block;');
-                                                                        span.innerText = 'Required option is empty!';
-                                                                    form.querySelector( '#donate_options' ).appendChild(span);
+                                                                    console.log( 'Required option is empty!' );
+                                                                    csMsgInfo.innerText = 'Required option is empty!';
                                                                     return;
                                                                 }
-
+                                                                // AJAX Calling Form Final Form Data
                                                                 $.ajax({
 
                                                                     url : ajaxURL,

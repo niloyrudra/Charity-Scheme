@@ -12,6 +12,12 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
     transition: all 360ms ease-in-out 500ms;
 }
+.form-content form span {
+  display: block;
+  padding: 0.2rem 0;
+  color: rgba(255, 0, 0, 0.712);
+  font-size: 12px;
+}
 .form-content select {
     width: 100%;
     margin-bottom: 0.75rem;
