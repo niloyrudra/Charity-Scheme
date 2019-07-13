@@ -138,20 +138,23 @@ function save_charity_donation_form_two() {
             )
         );
         
-        $output = '<div class="row"><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
-
         if( $myposts ) {
+
+            $output = '<div class="row"><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
             foreach ($myposts as $mypost) {
                 $output .= '<option value="'. $mypost->post_title .'">'. $mypost->post_title .'</option>';
             }
+            $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="submit" name="item_seclect_btn" value="Select"><div class="lds-charity"><div></div><div></div><div></div></div><span></span></form></div>';
+
+            echo $output;
+
+        } else {
+            // If no institution found, return 0
+            echo 0;
         }
-
-        $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="submit" name="item_seclect_btn" value="Select"><div class="lds-charity"><div></div><div></div><div></div></div><span></span></form></div>';
-
-        echo $output;
         
     } else {
-
+        // If AJAX return nothing
         echo 0;
         
     }
@@ -220,10 +223,7 @@ function save_charity_data_form() {
     } else {
         echo 0;
     }
-
-
     die();
-
 }
 add_action( 'admin_post_nopriv_save_charity_donation_data_form', 'save_charity_data_form' );
 add_action( 'admin_post_save_charity_donation_data_form', 'save_charity_data_form' );
@@ -394,13 +394,20 @@ add_action( 'init', 'custom_post_types_generator' );
 // Adding Meta Boxes
 add_action( 'add_meta_boxes', 'attaching_custom_meta_boxes_to_cpt' );
 add_action( 'save_post', 'save_meta_box_data' );
+
+
+
 // Sortable Column Setup Hook For Educational Institutions
 add_action( 'manage_edu_institutions_posts_columns', 'reset_columns_for_edu_institutions' );
 // add_filter( 'manage_edit-edu_institutions_sortable_columns', 'setting_sortable_columns_for_edu_institutions' );
 // add_filter( 'manage_edit-edu_institutions_columns', 'setting_sortable_columns_for_edu_institutions' );
 
-// Sortable Column Setup Hook For Educational Institutions
+
+
+// Sortable Column Setup Hook For Sports Club
 add_action( 'manage_sport_clubs_posts_columns', 'reset_columns_for_sport_clubs' );
+// Sortable Column Setup Hook For Charity Donations
+add_action( 'manage_charity_donations_posts_columns', 'reset_columns_for_charity_donations' );
 
 if( ! function_exists( 'attaching_custom_meta_boxes_to_cpt' ) ) {
     function attaching_custom_meta_boxes_to_cpt() {
@@ -477,6 +484,7 @@ if( ! function_exists( 'save_meta_box_data' ) ) {
     }
 }
 
+// Aranging Columns for Educational Institutions Post Type
 if( ! function_exists( 'reset_columns_for_edu_institutions' ) ) {
     function reset_columns_for_edu_institutions( $columns ) {
 
@@ -495,18 +503,20 @@ if( ! function_exists( 'reset_columns_for_edu_institutions' ) ) {
 
     }
 }
+
+// Making Sortable Columns for Educational Institutions Post Type
 // if( ! function_exists( 'setting_sortable_columns_for_edu_institutions' ) ) {
 //     function setting_sortable_columns_for_edu_institutions( $columns ) {
+//         $columns[ 'country' ] = 'counties';
+//         $columns[ 'county' ] = 'counties';
+//         $columns[ 'city' ] = 'cities';
+//         $columns[ 'edu_type' ] = 'edu_types';
 //         var_dump($columns );
-//         $columns[ 'country' ] = 'country';
-//         $columns[ 'county' ] = 'county';
-//         $columns[ 'city' ] = 'city';
-//         $columns[ 'edu_type' ] = 'edu_type';
-
 //         return $columns;
-
 //     }
 // }
+
+// Aranging Columns for Sports Club Post Type
 if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
     function reset_columns_for_sport_clubs( $columns ) {
 
@@ -521,6 +531,19 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
 
     }
 }
+// Aranging Columns for Carity Donations Post Type
+if( ! function_exists( 'reset_columns_for_charity_donations' ) ) {
+    function reset_columns_for_charity_donations( $columns ) {
+        $title = $columns[ 'title' ];
+        $date = $columns[ 'date' ];
+        $author = $columns[ 'author' ];
+
+        $columns[ 'title' ] = __( 'Charity Scheme Name' );
+        $columns[ 'author' ] = __( 'Donner\'s Name' );
+        
+        return $columns;
+    }
+}
 
 
 /**
@@ -531,7 +554,8 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
  * 
  */
 
- if( ! shortcode_exists( 'charity' ) ) :
+// ShortCode [charity]
+if( ! shortcode_exists( 'charity' ) ) :
 
     add_shortcode( 'charity', 'generate_shortcode_for_charity_scheme_option' );
     if( !function_exists( 'generate_shortcode_for_charity_scheme_option' ) ) :
@@ -551,33 +575,29 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
             // Satrt HTML Body section...
             ob_start();
         ?>
-                    <div class="form-content">
-                        <div class="row">
-                        <!-- <form action="/a" method="post"> -->
-                        <form id="charity-donation-form-one" action="#" method="post" data-url="<?php echo esc_attr( admin_url('admin-post.php') ); ?>">
+            <div class="form-content">
+                <div class="row">
+                <form id="charity-donation-form-one" action="#" method="post" data-url="<?php echo esc_attr( admin_url('admin-post.php') ); ?>">
 
-                            <h4 style="text-transform:uppercase;"><?php echo __( 'Schools or Sports Charity Scheme:' ); ?></h4>
-                            <select name="charity_schemes" id="charity_schemes">
-                                <option value=""><?php echo __( '...Please Select an Option' ) ?></option>
-                            <?php           
-                                $selected = @$_POST[ 'charity_schemes' ] ? $_POST[ 'charity_schemes' ] : '';
-                                foreach ( $post_types  as $post_type ) {
-                                    if ( $post_type->name == 'edu_institutions' || $post_type->name == 'sport_clubs' ) { ?>
-                                    <option value="<?php echo $post_type->name; ?>" <?php echo ( $selected == $post_type->name ? 'selected="selected"' : '' ); ?>><?php echo $post_type->label; ?></option>
-                                <?php
-                                    }
-                                }
-                            ?>  </select>
-                            <br />
-                                <input type="submit" name="sub_btn" id="sub_btn" value="Proceed" />
-                                <span class="cs-type-field" style="color:#FF0000;display:block;margin-top:0.5rem;"></span>
-                                <div class="lds-charity"><div></div><div></div><div></div></div>
-                            </form>
-                        </div><!-- /.row -->
-                    
-                    <!-- HTML FORM TWO  -->
-                    
-                    </div> <!-- /.form-content -->   
+                    <h4 style="text-transform:uppercase;"><?php echo __( 'Schools or Sports Charity Scheme:' ); ?></h4>
+                    <select name="charity_schemes" id="charity_schemes">
+                        <option value=""><?php echo __( '...Please Select an Option' ) ?></option>
+                    <?php           
+                        $selected = @$_POST[ 'charity_schemes' ] ? $_POST[ 'charity_schemes' ] : '';
+                        foreach ( $post_types  as $post_type ) {
+                            if ( $post_type->name == 'edu_institutions' || $post_type->name == 'sport_clubs' ) { ?>
+                            <option value="<?php echo $post_type->name; ?>" <?php echo ( $selected == $post_type->name ? 'selected="selected"' : '' ); ?>><?php echo $post_type->label; ?></option>
+                        <?php
+                            }
+                        }
+                    ?>  </select>
+                    <br />
+                        <input type="submit" name="sub_btn" id="sub_btn" value="Proceed" />
+                        <span class="cs-type-field" style="color:#FF0000;display:block;margin-top:0.5rem;"></span>
+                        <div class="lds-charity"><div></div><div></div><div></div></div>
+                    </form>
+                </div><!-- /.row -->
+            </div> <!-- /.form-content -->   
         <?php
 
             return ob_get_clean();
@@ -586,9 +606,25 @@ if( ! function_exists( 'reset_columns_for_sport_clubs' ) ) {
 
     endif;
 
- endif;
+endif;
 
+// ShortCode [charity-user-section]
+if( ! shortcode_exists( 'charity-user-section' ) ):
 
+    add_shortcode( 'charity-user-section', 'charity_user_section' );
+    function charity_user_section( $atts = [], $content = null ) {
+        if( is_user_logged_in() ) {
+            $is_user_has_charity = get_user_meta( get_current_user_id(), '_donate_charity_key', true );
+            if( $is_user_has_charity ) {
+                return '<div id="charity-notice-content"><p>You have choosen <b>' . $is_user_has_charity . '</b> for your Charity Scheme.</p><p>You can edit or change your Charity Scheme <a href="/charity-scheme" rel="nofollow"><i>here</i></a>.</p></div>';
+            } else {
+                $charity_link = esc_url(get_home_url() . '/charity-scheme/') ;
+                return '<div id="charity-notice-content"><p>At Orbit Training we believe it’s important to invest in helping people and the future, if you wish to be part of this please select a charity scheme and every certificate purchased, we donate 30% back to charities. If you are interested, please check out our <a href="' . $charity_link . '" rel="nofollow">Charity Scheme</a> and become a contributor.</p></div>';
+            }
+        }
+    }
+
+endif;
 
 /**
  * The field on the editing screens.
@@ -668,26 +704,6 @@ add_action(
     'edit_user_profile_update',
     'wporg_usermeta_form_field_charity_scheme_update'
 );
-
-/**
- * 
- *  ============
- *  MAIL TRAP
- *  ============
- * 
- */
-// function mailtrap($phpmailer) {
-//     $phpmailer->isSMTP();
-//     $phpmailer->Host = 'smtp.mailtrap.io';
-//     $phpmailer->SMTPAuth = true;
-//     $phpmailer->Port = 2525;
-//     $phpmailer->Username = 'f9fbc11e592e64';
-//     $phpmailer->Password = '1c33a8ca575489';
-// }
-  
-// add_action('phpmailer_init', 'mailtrap');
-
-
 
 // REST_API Add Custom Fields
 if( ! function_exists( 'charity_scheme_custom_field' ) ) {

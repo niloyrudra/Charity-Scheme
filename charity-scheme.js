@@ -1,4 +1,3 @@
-
 jQuery( document ).ready(
     function($) {
         var formsContainer = document.querySelector('.form-content');
@@ -8,15 +7,13 @@ jQuery( document ).ready(
         var csTypeField = document.querySelector('.cs-type-field');
         var formTwo;
         var form;
-
         // Charity Scheme Type Form One Exicution...
         if( formOne ) {
             formOne.addEventListener( 'submit', e => {
                 e.preventDefault();
-                csTypeField.innerText = '';
-                
+                csTypeField.innerText = '';                
                 var charityScheme = document.querySelector( '#charity_schemes' ).value,
-                ajaxURL = formOne.getAttribute('data-url');
+                    ajaxURL = formOne.getAttribute('data-url');
                 // Field Validation...
                 if( charityScheme === '' ) {
                     console.log( 'Required field is empty! Please Select an option.' );
@@ -24,8 +21,7 @@ jQuery( document ).ready(
                     return;
                 }
                 // AJAX Call...
-                $.ajax({
-                    
+                $.ajax({                    
                     url : ajaxURL,
                     type : 'post',
                     data : {
@@ -59,37 +55,28 @@ jQuery( document ).ready(
                                 formOneBtn.setAttribute( 'disabled', 'disabled' );
                                 formOneBtn.style.display = 'none';
                                 formTwo = formOne.parentElement.nextElementSibling.firstChild;
-
                                 // Charity Scheme Type Form Two Exicution...
-                                if( formTwo !== '' ) {
-                                    
+                                if( formTwo !== '' ) {                                    
                                     formTwo.addEventListener( 'submit', e => {
-                                        e.preventDefault();
-                                            
+                                        e.preventDefault();                                            
                                         var country = formTwo.querySelector( '#country' ).value,
                                             county = formTwo.querySelector( '#county' ).value,
                                             city = formTwo.querySelector( '#city' ).value,
                                             cptName = formTwo.querySelector( 'input[name="cpt_name"]' ).value,
                                             ajaxURL = formTwo.getAttribute('data-url'),
-                                            institutionType;
-                                                
+                                            institutionType;                                                
                                             if( cptName === 'edu_institutions' ) {
                                                 institutionType = formTwo.querySelector( '#edu_type' ).value;
                                             } else {
                                                 institutionType = formTwo.querySelector( '#sport_type' ).value;
-                                            }
-                            
+                                            }                            
                                             var countryTextMsg = formTwo.querySelector('.cs_country'),
                                                 countyTextMsg = formTwo.querySelector('.cs_county'),
-                                                cityTextMsg = formTwo.querySelector('.cs_city'),
-                                                eduType,
-                                                sportType;
-
+                                                cityTextMsg = formTwo.querySelector('.cs_city');
                                             // Setting Info Messages Span Empty...
                                             countryTextMsg.innerText = '';
                                             countyTextMsg.innerText = '';
-                                            cityTextMsg.innerText = '';
-                                                                        
+                                            cityTextMsg.innerText = '';                                                                        
                                             // Field Validation...
                                             if( country === '0' ) {
                                                 countryTextMsg.innerText = 'Please select a country!';
@@ -113,10 +100,8 @@ jQuery( document ).ready(
                                                 } else {
                                                     formTwo.querySelector('.cs_sport_type').innerText = 'You have to select a Club!';
                                                     return;
-                                                }
-                                                
+                                                }                                                
                                             }
-
                                         // AJAX Call...
                                         $.ajax({
                             
@@ -140,20 +125,32 @@ jQuery( document ).ready(
                                                 formTwo.querySelector( '.lds-charity' ).classList.remove( 'show' );
                                             },
                                             success : function( res ) {
+                                                var formTwoSelectFields = formTwo.querySelectorAll('select');
                                                 if( res == 0 ) {
                                                     console.log( 'Unable to submit your donation plan! Please try again later.' );
+                                                    // disable all the form fields of Form Two                                                        
+                                                    if(formTwoSelectFields) {
+                                                        formTwoSelectFields.forEach( selectField => {
+                                                            selectField.setAttribute( 'disabled', 'disabled' );
+                                                            selectField.style.opacity = '0.5';
+                                                        });
+                                                    }
+                                                    var msgDiv = document.createElement('div');
+                                                    msgDiv.setAttribute('id', 'msg-div');
+                                                    msgDiv.innerHTML = `<h4>Sorry! Unable to submit your request! No results found...</h4><h5>Please check out your options and try again or later.</h5><div class="charity-msg-div"><a id="msg-div-link_one" href="/charity-scheme" rel="nofollow">Try Again</a><a id="msg-div-link_two" href="/user-profile" rel="nofollow">Take Me Back</a></div>`;          
+                                                    // Hidding Proceed Button
+                                                    formTwo.querySelector('#option_btn').style.display = 'none';
+                                                    // Appending message
+                                                    formsContainer.appendChild(msgDiv);                                                    
                                                 } else {
-                                                    console.log( 'Congratulations! Your donation plan has been successfully submitted.' );
-                            
+                                                    console.log( 'Congratulations! Your donation plan has been successfully submitted.' );                            
                                                     if( res ) {
-                                                            // Hidding Proceed Button
+                                                        // Hidding Proceed Button
                                                         formTwo.querySelector('#option_btn').style.display = 'none';
                                                         var container = document.createElement( 'div' );
                                                             container.setAttribute( 'class', 'form-Three-container' );
                                                             container.innerHTML = res;
-
-                                                        // disable all the form fields of Form Two
-                                                        var formTwoSelectFields = formTwo.querySelectorAll('select');
+                                                        // disable all the form fields of Form Two             
                                                         if(formTwoSelectFields) {
                                                             formTwoSelectFields.forEach( selectField => {
                                                                 selectField.setAttribute( 'disabled', 'disabled' );
@@ -162,9 +159,7 @@ jQuery( document ).ready(
                                                         }
                                                         // Appending Form Two...
                                                         formsContainer.appendChild(container);
-
                                                         form = formOne.parentElement.nextElementSibling.nextElementSibling.firstChild.querySelector('#charity-donation-data-form');
-
                                                         // Final Form Exicution...
                                                         if( form ) {
                                                             
@@ -215,11 +210,11 @@ jQuery( document ).ready(
                                                                     },
                                                                     success : function( res ) {
                                                                         if( res == 0 ) {
-                                                                            console.log( 'Unable to submit your donation plan! Please try again later.' );
+                                                                            console.log( 'Unable to submit your donation plan! Please try again later.' );                   
                                                                         } else {
                                                                             console.log( 'Congratulations! Your donation plan has been successfully submitted.' );
                                                                             formsContainer.innerHTML = '';
-                                                                            formsContainer.innerHTML = `<h4 style="color:#54B948">Congratulations <a href="/user-profile" ref="nofollow" style="color:#54B948">${res}</a>! Your donation plan has been successfully submitted.</h4>`;
+                                                                            formsContainer.innerHTML = `<div id="success-msg-div"><h4>Congratulations <a href="/user-profile" ref="nofollow">${res}</a>! Your donation plan has been successfully submitted.</h4></div>`;
                                                                         }
                                                                     }
 
@@ -238,20 +233,21 @@ jQuery( document ).ready(
                             
                                     } );
 
-                                } // Form Two
+                                } // End IF Satement OF FORM TWO
                                                                     
                             }
                                 
                         }
 
                     }
-                        
-                });
-                    
-            } );
 
-        }
+                    
+                });
+                
+            } );
             
+        } // End IF Satement OF FORM ONE
+         
     }
 
 );
