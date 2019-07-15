@@ -136,27 +136,21 @@ function save_charity_donation_form_two() {
                     )
                 )
             )
-        );
-        
+        );        
         if( $myposts ) {
-
             $output = '<div class="row"><form id="charity-donation-data-form" action="#" method="post" data-url="' . esc_attr( admin_url('admin-post.php') ) .'"><h6 style="text-transform:uppercase;">' . ( $cptName == 'edu_institutions' ? __( 'Institutions:' ) : __( 'Clubs:' ) ) . '</h6><select name="donate_options" id="donate_options"><option value="">...Please Select a(an) ' . esc_html( $institutionType ) . '</option>';
             foreach ($myposts as $mypost) {
                 $output .= '<option value="'. $mypost->post_title .'">'. $mypost->post_title .'</option>';
             }
             $output .= '</select><input type="hidden" name="cpt_user_id" id="cpt_user_id" value="' . esc_attr( get_current_user_id() ) . '"><input type="hidden" name="selected_cpt_name" id="selected_cpt_name" value="' . esc_attr( $cptName ) . '"><input type="hidden" name="selected_country" id="selected_country" value="' . esc_attr( $country ) . '"><input type="hidden" name="selected_county" id="selected_county" value="' . esc_attr( $county) . '"><input type="hidden" name="selected_city" id="selected_city" value="' . esc_attr( $city ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="hidden" name="selected_type" id="selected_type" value="' . esc_attr( $institutionType ) . '"><input type="submit" name="item_seclect_btn" value="Select"><div class="lds-charity"><div></div><div></div><div></div></div><span></span></form></div>';
-
             echo $output;
-
         } else {
             // If no institution found, return 0
             echo 0;
-        }
-        
+        }        
     } else {
         // If AJAX return nothing
-        echo 0;
-        
+        echo 0;        
     }
 
     die();
@@ -170,8 +164,7 @@ add_action( 'admin_post_save_charity_donation_form_two', 'save_charity_donation_
  * FINAL AJAX CALL
  */
 // AJAX Callback Functionality And Sending E-mail To Administrator
-function save_charity_data_form() {
-    
+function save_charity_data_form() {    
     $name = wp_strip_all_tags( $_POST[ 'name' ] );
     $instituteType = wp_strip_all_tags( $_POST[ 'instituteType' ] );
     $postTypeID = wp_strip_all_tags( $_POST[ 'postTypeID' ] );
@@ -184,11 +177,21 @@ function save_charity_data_form() {
     $donnerUserName = ucfirst( get_userdata( (int)$donnerID )->user_login );
     $donnerDisplayName = ucfirst( get_userdata( (int)$donnerID )->display_name );
     $donnerEmail = get_userdata( (int)$donnerID )->user_email;
-    $donnerRole = ucfirst( implode( ', ', get_userdata( (int)$donnerID )->roles ) );
-    
+    $donnerRole = ucfirst( implode( ', ', get_userdata( (int)$donnerID )->roles ) );    
     $content = __( 'This Charity Scheme is on <b>' ) . $charityType . __( '</b>.<br />It\'s a ' ) . $instituteType . __( ', located at ' ) . $city . ', ' . $county . ', ' . $country . __( '.<br /><b><u>Donner:</u></b><br /><i>UserName</i> : <b>' ) . $donnerUserName . __( '</b>.<br /><i>Display Name</i> : <b>' ) . $donnerDisplayName . __( '</b>.<br /><i>E-mail</i> : <b>< ') . $donnerEmail . __( ' ></b>.<br /><i>User Role</i> : <b>') . $donnerRole . '</b>.';
-       
     $msgContent = 'This Charity Scheme is on ' . $charityType . '. It\'s a ' . $instituteType . ', located at ' . $city . ', ' . $county . ', ' . $country . '.\nDonner: \nUserName : ' . $donnerUserName . '.\nDisplay Name : ' . $donnerDisplayName . '.\nE-mail : < ' . $donnerEmail . ' >.\nUser Role : ' . $donnerRole . '.';
+
+    // Checking whether there was a existing Charity Doantions Post or not...
+    $exit_charity_ID = '';
+    $exit_charity_title = esc_html( get_user_meta( (int)$donnerID, '_donate_charity_key', true ) );
+    if( $exit_charity_title ) {
+        $exit_charity = get_page_by_title( $exit_charity_title, OBJECT, 'charity_donations' );
+        // global $wpdb;
+        // $exit_charity = $wpdb->get_row( $wpdb->prepare("select * from wp_posts where post_title='%s'", $exit_charity_title ));
+
+        // Delete Any Existing Charity Donation Post Before Inserting The New Charity Donation Post...
+        wp_delete_post( $exit_charity->ID, false ); // Not to delete Completely, just Move it to the trash
+    }
 
     // Array for WP_INSERT_POST
     $args = [
@@ -202,24 +205,18 @@ function save_charity_data_form() {
     $charityID = wp_insert_post( $args );
     
     if( $charityID !== 0 ) {
-
         // Update User metaData
         update_user_meta( (int)$donnerID, '_donate_charity_key', $name );
-
         // Variables for Email
         $to = get_bloginfo( 'admin_email' );
         $subject = __( 'Charity Donation Scheme | ' ) . $name . __( '[ ' ) . $instituteType . __( ' ] | By - ' ) . $donnerDisplayName;
         $message = $msgContent;
-
         $headers[] = __( 'From: ' ) . get_bloginfo( 'name' ) . ' <' . $to . '>';
         $headers[] = __( 'Reply-To: ' ) . $donnerDisplayName . ' <' . $donnerEmail . '>';
         $headers[] = 'Content-Type: text/html: charset=UTF-8';
-
         // Triggering Email Submission
         wp_mail( $to, $subject, $message, $headers );  // wp_mail( $to, $subject, $message, '', array( '' ) ); the last array for attaching atachments
-
         echo $donnerDisplayName; // Return either 1 or 0
-
     } else {
         echo 0;
     }
@@ -228,7 +225,6 @@ function save_charity_data_form() {
 add_action( 'admin_post_nopriv_save_charity_donation_data_form', 'save_charity_data_form' );
 add_action( 'admin_post_save_charity_donation_data_form', 'save_charity_data_form' );
 
-
 /**
  * 
  *  ===============================
@@ -236,12 +232,10 @@ add_action( 'admin_post_save_charity_donation_data_form', 'save_charity_data_for
  *  ===============================
  * 
  */
-
 // Registering Custom Post Types
 if( ! function_exists( 'custom_post_types_generator' ) ) {
 
     function custom_post_types_generator() {
-
         // Array Of Multiple Custom Post Types
         $post_types = [
             'edu_institutions' => [
@@ -267,6 +261,8 @@ if( ! function_exists( 'custom_post_types_generator' ) ) {
         // Generating Multiple Custom Post Types
         if( $post_types ) {
             foreach ($post_types as $post_type_key => $post_type_value) {
+                // Include Author support only into Charity Donations Post Type
+                $supports = ( $post_type_key == 'charity_donations' ? [ 'title', 'editor', 'thumbnail', 'author' ] : [ 'title', 'editor', 'thumbnail' ] );
                 
                 register_post_type( $post_type_key, [
                     'labels'            => [
@@ -285,9 +281,9 @@ if( ! function_exists( 'custom_post_types_generator' ) ) {
                     'show_in_menu'      => true,
                     'show_in_nav_menus' => true,
                     'show_in_rest'      => true,
-                    'supports'          => [ 'title', 'editor', 'author', 'thumbnail' ],
+                    'supports'          => $supports,
                     'menu_icon'         => $post_type_value[ 'menu_icon' ],
-                    'hierarchical'      => true,
+                    'hierarchical'      => false,
                     'capability_type'   => 'post'
                 ] );
 
@@ -390,12 +386,9 @@ if( ! function_exists( 'custom_post_types_generator' ) ) {
 }
 add_action( 'init', 'custom_post_types_generator' );
 
-
 // Adding Meta Boxes
 add_action( 'add_meta_boxes', 'attaching_custom_meta_boxes_to_cpt' );
 add_action( 'save_post', 'save_meta_box_data' );
-
-
 
 // Sortable Column Setup Hook For Educational Institutions
 add_action( 'manage_edu_institutions_posts_columns', 'reset_columns_for_edu_institutions' );
@@ -708,7 +701,6 @@ add_action(
 // REST_API Add Custom Fields
 if( ! function_exists( 'charity_scheme_custom_field' ) ) {
     function charity_scheme_custom_field() {
-        // global $authordata;
         register_rest_field( 'charity_donations', 'donner_name', [
             'get_callback'      => function() {
                 return get_the_author();
@@ -717,7 +709,6 @@ if( ! function_exists( 'charity_scheme_custom_field' ) ) {
 
         register_rest_field( 'user', 'charity_scheme', [
             'get_callback'      => function( $user ) {
-                // var_dump($user);
                 return get_user_meta( $user['id'], '_donate_charity_key', true );
             }
         ] );
